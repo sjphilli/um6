@@ -49,6 +49,33 @@
 const uint8_t TRIGGER_PACKET = UM6_TEMPERATURE;
 
 /**
+ * Function generalizes the process of writing a 9-entry vector into consecutive
+ * fields in UM6 registers.
+ */
+ template<typename RegT>
+ void configureVector9(um6::Comms* sensor, const um6::Accessor<RegT>& reg,
+                       std::string param, std::string human_name)
+ {
+   if (reg.length != 9)
+   {
+     throw std::logic_error("configureVector9 may only be used with 9-field registers!");
+   }
+   if (ros::param::has(param))
+   {
+     std::vector<double> soft_iron;
+     ros::param::get(param, soft_iron);
+
+     ROS_INFO_STREAM("Configuring " << human_name);
+     reg.set_scaled(0, soft_iron[0]); reg.set_scaled(1, soft_iron[1]); reg.set_scaled(2, soft_iron[2]);
+     reg.set_scaled(3, soft_iron[3]); reg.set_scaled(4, soft_iron[4]); reg.set_scaled(5, soft_iron[5]);
+     reg.set_scaled(6, soft_iron[6]); reg.set_scaled(7, soft_iron[7]); reg.set_scaled(8, soft_iron[8]);
+     if (!sensor->sendWaitAck(reg))
+     {
+       throw std::runtime_error(" Unable to configure soft iron calibration.");
+     }
+   }
+ }
+/**
  * Function generalizes the process of writing an XYZ vector into consecutive
  * fields in UM6 registers.
  */
@@ -72,7 +99,7 @@ void configureVector3(um6::Comms* sensor, const um6::Accessor<RegT>& reg,
     reg.set_scaled(0, x);
     reg.set_scaled(1, y);
     reg.set_scaled(2, z);
-    if (sensor->sendWaitAck(reg))
+    if (!sensor->sendWaitAck(reg))
     {
       throw std::runtime_error("Unable to configure vector.");
     }
@@ -104,7 +131,7 @@ void configureSensor(um6::Comms* sensor, ros::NodeHandle *private_nh)
 
   // Enable outputs we need.
   const uint8_t UM6_BAUD_115200 = 0x5;
-  uint32_t comm_reg = UM6_BROADCAST_ENABLED |
+  uint32_t comm_reg = UM6_BROADCAST_ENABLED | UM6_MAG_RAW_ENABLED |
                       UM6_GYROS_PROC_ENABLED | UM6_ACCELS_PROC_ENABLED | UM6_MAG_PROC_ENABLED |
                       UM6_QUAT_ENABLED | UM6_EULER_ENABLED | UM6_COV_ENABLED | UM6_TEMPERATURE_ENABLED |
                       UM6_BAUD_115200 << UM6_BAUD_START_BIT;
@@ -165,6 +192,7 @@ void configureSensor(um6::Comms* sensor, ros::NodeHandle *private_nh)
   configureVector3(sensor, r.mag_bias, "~mag_bias", "magnetic bias vector");
   configureVector3(sensor, r.accel_bias, "~accel_bias", "accelerometer bias vector");
   configureVector3(sensor, r.gyro_bias, "~gyro_bias", "gyroscope bias vector");
+  configureVector9(sensor, r.mag_soft_bias, "/soft_iron_bias", "soft iron calibration matrix");
 }
 
 
@@ -187,6 +215,7 @@ void publishMsgs(um6::Registers& r, ros::NodeHandle* imu_nh, sensor_msgs::Imu& i
 {
   static ros::Publisher imu_pub = imu_nh->advertise<sensor_msgs::Imu>("data", 1, false);
   static ros::Publisher mag_pub = imu_nh->advertise<geometry_msgs::Vector3Stamped>("mag", 1, false);
+  static ros::Publisher mag_raw_pub = imu_nh->advertise<geometry_msgs::Vector3Stamped>("mag_raw", 1, false);
   static ros::Publisher rpy_pub = imu_nh->advertise<geometry_msgs::Vector3Stamped>("rpy", 1, false);
   static ros::Publisher temp_pub = imu_nh->advertise<std_msgs::Float32>("temperature", 1, false);
 
@@ -260,6 +289,27 @@ void publishMsgs(um6::Registers& r, ros::NodeHandle* imu_nh, sensor_msgs::Imu& i
     mag_pub.publish(mag_msg);
   }
 
+  if (mag_raw_pub.getNumSubscribers() > 0)
+  {
+    geometry_msgs::Vector3Stamped mag_raw_msg;
+    mag_raw_msg.header = imu_msg.header;
+
+    if (tf_ned_to_enu)
+    {
+      mag_raw_msg.vector.x = r.mag_raw.get_scaled(1);
+      mag_raw_msg.vector.y = r.mag_raw.get_scaled(0);
+      mag_raw_msg.vector.z = -r.mag_raw.get_scaled(2);
+    }
+    else
+    {
+      mag_raw_msg.vector.x = r.mag_raw.get_scaled(0);
+      mag_raw_msg.vector.y = r.mag_raw.get_scaled(1);
+      mag_raw_msg.vector.z = r.mag_raw.get_scaled(2);
+    }
+
+    mag_raw_pub.publish(mag_raw_msg);
+  }  
+  
   if (rpy_pub.getNumSubscribers() > 0)
   {
     geometry_msgs::Vector3Stamped rpy_msg;
