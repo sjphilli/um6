@@ -177,6 +177,7 @@ public:
     gyro_bias(this, UM6_GYRO_BIAS_XY, 3),
     accel_bias(this, UM6_ACCEL_BIAS_XY, 3),
     mag_bias(this, UM6_MAG_BIAS_XY, 3),
+    mag_soft_bias(this,UM6_MAG_CAL_00, 9),
     cmd_zero_gyros(this, UM6_ZERO_GYROS),
     cmd_reset_ekf(this, UM6_RESET_EKF),
     cmd_set_accel_ref(this, UM6_SET_ACCEL_REF),
@@ -192,7 +193,7 @@ public:
 
   // Configs
   const Accessor<uint32_t> communication, misc_config, status;
-  const Accessor<float> mag_ref, accel_ref;
+  const Accessor<float> mag_ref, accel_ref, mag_soft_bias;
   const Accessor<int16_t> gyro_bias, accel_bias, mag_bias;
 
   // Commands
