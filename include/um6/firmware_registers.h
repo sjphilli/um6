@@ -3,7 +3,7 @@
  *  \file
  *  \brief   Copied directly from the UM6_config.h file, available online here:
  *           http://sourceforge.net/p/um6firmware/code/34/tree/trunk/UM6%20Firmware/UM6_config.h#l14
- *  \author  CH Robotics 
+ *  \author  CH Robotics
  */
 
 
@@ -11,7 +11,7 @@
 #define	UM6_FIRMWARE_REVISION		(('U' << 24) | ('M' << 16) | ('2' << 8) | 'B')
 
 // CONFIG_ARRAY_SIZE and DATA_ARRAY_SIZE specify the number of 32 bit configuration and data registers used by the firmware
-// (Note: The term "register" is used loosely here.  These "registers" are not actually registers in the same sense of a 
+// (Note: The term "register" is used loosely here.  These "registers" are not actually registers in the same sense of a
 // microcontroller register.  They are simply index locations into arrays stored in global memory.  Data and configuration
 // parameters are stored in arrays because it allows a common communication protocol to be used to access all data and
 // configuration.  The software communicating with the sensor needs only specify the register address, and the communication
@@ -23,14 +23,14 @@
 #define	DATA_ARRAY_SIZE			48
 #define	COMMAND_COUNT			10
 
-// 
+//
 #define	CONFIG_REG_START_ADDRESS	     0
 #define	DATA_REG_START_ADDRESS		85
 #define	COMMAND_START_ADDRESS		170
 
 // These preprocessor definitions make it easier to access specific configuration parameters in code
 // They specify array locations associated with each register name.  Note that in the comments below, many of the values are
-// said to be 32-bit IEEE floating point.  Obviously this isn't directly the case, since the arrays are actually 32-bit unsigned 
+// said to be 32-bit IEEE floating point.  Obviously this isn't directly the case, since the arrays are actually 32-bit unsigned
 // integer arrays.  Bit for bit, the data does correspond to the correct floating point value.  Since you can't cast ints as floats,
 // special conversion has to happen to copy the float data to and from the array.
 // Starting with configuration register locations...
@@ -48,9 +48,9 @@
 #define	UM6_GYRO_BIAS_XY				(CONFIG_REG_START_ADDRESS + 11)		// Gyro biases are stored as 16-bit signed integers.  Bias correction is applied BEFORE scale factors are applied
 #define	UM6_GYRO_BIAS_Z				(CONFIG_REG_START_ADDRESS + 12)
 #define	UM6_ACCEL_BIAS_XY				(CONFIG_REG_START_ADDRESS + 13)		// Accel biases are stored as 16-bit signed integers.  Bias correction is applied BEFORE scale factors are applied
-#define	UM6_ACCEL_BIAS_Z				(CONFIG_REG_START_ADDRESS + 14)		
+#define	UM6_ACCEL_BIAS_Z				(CONFIG_REG_START_ADDRESS + 14)
 #define	UM6_MAG_BIAS_XY				(CONFIG_REG_START_ADDRESS + 15)		// Mag biases are stored as 16-bit signed integers.  Bias correction is applied BEFORE magnetometer adjustment
-#define	UM6_MAG_BIAS_Z					(CONFIG_REG_START_ADDRESS + 16)		
+#define	UM6_MAG_BIAS_Z					(CONFIG_REG_START_ADDRESS + 16)
 #define	UM6_ACCEL_CAL_00				(CONFIG_REG_START_ADDRESS + 17)		// The accelerometer alignment matrix is a 3x3 matrix with 32-bit IEEE floating point entries
 #define	UM6_ACCEL_CAL_01				(CONFIG_REG_START_ADDRESS + 18)
 #define	UM6_ACCEL_CAL_02				(CONFIG_REG_START_ADDRESS + 19)
@@ -201,7 +201,7 @@
 #define	UM6_QUAT_ENABLED			(1 << 23)	// Enable transmission of quaternion data
 #define	UM6_EULER_ENABLED			(1 << 22)	// Enable transmission of euler angle data
 #define	UM6_COV_ENABLED				(1 << 21)	// Enable transmission of state covariance data
-#define UM6_TEMPERATURE_ENABLED     (1 << 20) // Enable transmission of gyro temperature readings     
+#define UM6_TEMPERATURE_ENABLED     (1 << 20) // Enable transmission of gyro temperature readings
 #define UM6_GPS_POSITION_ENABLED 	(1 << 19)	// Enable transmission of latitude and longitude data
 #define UM6_GPS_REL_POSITION_ENABLED	(1 << 18)	// Enable transmission of computed North and East position (with respect to home position)
 #define UM6_GPS_COURSE_SPEED_ENABLED (1 << 17)	// Enable transmission of computed GPS course and speed
@@ -215,7 +215,7 @@
 #define	UM6_BAUD_START_BIT			8				// Specifies the start location of the baud rate bits
 
 #define	UM6_SERIAL_RATE_MASK		(0x000FF)	// Mask specifying which bits in this register are used to indicate the broadcast frequency
-	 
+
 // MISC Configuration register
 #define	UM6_MAG_UPDATE_ENABLED		(1 << 31)	// Enable magnetometer-based updates in the EKF
 #define	UM6_ACCEL_UPDATE_ENABLED	(1 << 30) 	// Enable accelerometer-based updates in the EKF
@@ -245,6 +245,3 @@
 #define	UM6_FLASH_WRITE_FAILED		(1 << 12) 	// Indicates that a write to flash command failed to complete properly
 
 #define	UM6_SELF_TEST_COMPLETE		(1 << 0)		// Indicates that a self-test was completed
-
-
-

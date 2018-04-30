@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<launch>
+  
+  
+  
+  <node 
+	pkg="um6" 
+	type="um6_driver" 
+	name="um6_driver"
+	output="screen"
+	ns="um6">
+	
+  <param name="/um6_driver/port" value="/dev/ttyUSB0" />
+  </node>
+
+
+
+  <node 
+	pkg="imu_filter_madgwick" 
+	type="imu_filter_node" 
+	name="imu_um6_filter_node" 
+    output="screen"
+    ns="um6">
+    <param name="use_mag" value="true"/>
+    <param name="use_magnetic_field_msg" value="false"/>
+  </node>
+
+  <!--
+    <node
+	pkg="um7"
+	type="um7_driver"
+	name="um7_driver"
+	output="screen"
+	ns="um7">
+   <param name="/um7_driver/port" value="/dev/ttyUSB1" />
+   </node>
+   
+   
+  <node 
+	pkg="imu_filter_madgwick" 
+	type="imu_filter_node" 
+	name="imu_um7_filter_node" 
+    output="screen"
+    ns="um7">
+    <param name="use_mag" value="true"/>
+    <param name="use_magnetic_field_msg" value="false"/>
+  </node>
+  
+  
+  <node pkg="imu_complementary_filter" type="complementary_filter_node"
+      name="um6_complementary_filter" output="screen" ns="um6">
+    <param name="do_bias_estimation" value="false"/>
+    <param name="do_adaptive_gain" value="false"/>
+    <param name="use_mag" value="true"/>
+    <param name="gain_acc" value="0.01"/>
+    <param name="gain_mag" value="0.01"/>
+    <param name="publish_debug_topics_" value="true"/>
+  </node>
+
+  <node pkg="imu_complementary_filter" type="complementary_filter_node"
+      name="um7_complementary_filter" output="screen" ns="um7">
+    <param name="do_bias_estimation" value="false"/>
+    <param name="do_adaptive_gain" value="false"/>
+    <param name="use_mag" value="true"/>
+    <param name="gain_acc" value="0.01"/>
+    <param name="gain_mag" value="0.01"/>
+    <param name="publish_debug_topics_" value="true"/>
+  </node>-->
+
+</launch>

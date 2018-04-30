@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node
+	pkg="um6"
+	type="um6_driver"
+	name="um6_driver"
+	output="screen">
+   <param name="tf_ned_to_enu" value="true"/>
+   <remap from="/imu/data" to="/imu/data_raw"/>
+   <param name="/um6_driver/port" value="/dev/ttyUSB0" />
+   <!--<rosparam param="/soft_iron_bias">[0.002813, 0.0, 0.0, 0.0, 0.002813, 0.0, 0.0, 0.0, 0.002813]</rosparam>-->
+   <rosparam param="/soft_iron_bias">[0.00431, 0.0, 0.0, 0.0, 0.00431, 0.0, 0.0, 0.0, 0.00431]</rosparam>
+   <rosparam param="/mag_bias/x">0.0000000</rosparam>
+   <rosparam param="/mag_bias/y">0.0000000</rosparam>
+   <rosparam param="/mag_bias/z">0.0000000</rosparam>
+   </node>
+
+
+</launch>

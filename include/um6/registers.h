@@ -159,9 +159,10 @@ class Registers
 {
 public:
   Registers() :
+    mag_soft_bias(this,UM6_MAG_CAL_00, 9),
     gyro_raw(this, UM6_GYRO_RAW_XY, 3),
     accel_raw(this, UM6_ACCEL_RAW_XY, 3),
-    mag_raw(this, UM6_MAG_RAW_XY, 3),
+    mag_raw(this, UM6_MAG_RAW_XY, 3, 1),
     gyro(this, UM6_GYRO_PROC_XY, 3, 0.0610352 * TO_RADIANS),
     accel(this, UM6_ACCEL_PROC_XY, 3, 0.00179639),
     mag(this, UM6_MAG_PROC_XY, 3, 0.000305176),
@@ -177,7 +178,6 @@ public:
     gyro_bias(this, UM6_GYRO_BIAS_XY, 3),
     accel_bias(this, UM6_ACCEL_BIAS_XY, 3),
     mag_bias(this, UM6_MAG_BIAS_XY, 3),
-    mag_soft_bias(this,UM6_MAG_CAL_00, 9),
     cmd_zero_gyros(this, UM6_ZERO_GYROS),
     cmd_reset_ekf(this, UM6_RESET_EKF),
     cmd_set_accel_ref(this, UM6_SET_ACCEL_REF),
@@ -193,9 +193,10 @@ public:
 
   // Configs
   const Accessor<uint32_t> communication, misc_config, status;
-  const Accessor<float> mag_ref, accel_ref, mag_soft_bias;
+  const Accessor<float> mag_ref, accel_ref;
   const Accessor<int16_t> gyro_bias, accel_bias, mag_bias;
 
+  const Accessor<float> mag_soft_bias; //SJP Added
   // Commands
   const Accessor<uint32_t> cmd_zero_gyros, cmd_reset_ekf,
         cmd_set_accel_ref, cmd_set_mag_ref;

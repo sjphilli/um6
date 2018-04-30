@@ -44,41 +44,49 @@
 #include "um6/registers.h"
 #include "um6/Reset.h"
 
+
+
 // Don't try to be too clever. Arrival of this message triggers
 // us to publish everything we have.
 const uint8_t TRIGGER_PACKET = UM6_TEMPERATURE;
 
 /**
- * Function generalizes the process of writing a 9-entry vector into consecutive
+ * Function generalizes the process of writing an XYZ vector into consecutive
  * fields in UM6 registers.
  */
  template<typename RegT>
  void configureVector9(um6::Comms* sensor, const um6::Accessor<RegT>& reg,
                        std::string param, std::string human_name)
  {
+   std::cout << "Trying to set soft iron calibration" << std::endl;
    if (reg.length != 9)
    {
+     std::cout << "register lenght not equal to 9" << std::endl;
      throw std::logic_error("configureVector9 may only be used with 9-field registers!");
    }
+   std::cout << "Looking for param named: " << param << std::endl;
    if (ros::param::has(param))
    {
-     std::vector<double> soft_iron;
+      std::cout << "Have param" << std::endl;
+      std::vector<double> soft_iron;
+      //ros::param::get("/hard_iron_bias", hard_iron);
      ros::param::get(param, soft_iron);
 
-     ROS_INFO_STREAM("Configuring " << human_name);
+     ROS_INFO_STREAM("Configuring " << human_name << " to " << soft_iron[0] << " " << soft_iron[1] << " " << soft_iron[2] << " "
+                                    << soft_iron[3] << " "  << soft_iron[4] << " "  << soft_iron[5] << " "
+                                    << soft_iron[6] << " "  << soft_iron[7] << " "  << soft_iron[8] << " " );
      reg.set_scaled(0, soft_iron[0]); reg.set_scaled(1, soft_iron[1]); reg.set_scaled(2, soft_iron[2]);
      reg.set_scaled(3, soft_iron[3]); reg.set_scaled(4, soft_iron[4]); reg.set_scaled(5, soft_iron[5]);
      reg.set_scaled(6, soft_iron[6]); reg.set_scaled(7, soft_iron[7]); reg.set_scaled(8, soft_iron[8]);
+
      if (!sensor->sendWaitAck(reg))
      {
-       throw std::runtime_error(" Unable to configure soft iron calibration.");
+       std::cout << " Unable to configure soft iron" << std::endl;
+       throw std::runtime_error("Unable to configure vector.");
      }
    }
  }
-/**
- * Function generalizes the process of writing an XYZ vector into consecutive
- * fields in UM6 registers.
- */
+
 template<typename RegT>
 void configureVector3(um6::Comms* sensor, const um6::Accessor<RegT>& reg,
                       std::string param, std::string human_name)
@@ -90,6 +98,7 @@ void configureVector3(um6::Comms* sensor, const um6::Accessor<RegT>& reg,
 
   if (ros::param::has(param))
   {
+   std::cout << "Has param: " << param << std::endl;
     double x, y, z;
     ros::param::get(param + "/x", x);
     ros::param::get(param + "/y", y);
@@ -189,10 +198,10 @@ void configureSensor(um6::Comms* sensor, ros::NodeHandle *private_nh)
   // Configurable vectors.
   configureVector3(sensor, r.mag_ref, "~mag_ref", "magnetic reference vector");
   configureVector3(sensor, r.accel_ref, "~accel_ref", "accelerometer reference vector");
-  configureVector3(sensor, r.mag_bias, "~mag_bias", "magnetic bias vector");
+  configureVector3(sensor, r.mag_bias, "mag_bias", "magnetic bias vector");
   configureVector3(sensor, r.accel_bias, "~accel_bias", "accelerometer bias vector");
   configureVector3(sensor, r.gyro_bias, "~gyro_bias", "gyroscope bias vector");
-  configureVector9(sensor, r.mag_soft_bias, "/soft_iron_bias", "soft iron calibration matrix");
+  configureVector9(sensor, r.mag_soft_bias, "/soft_iron_bias", "soft iron bias matrix");
 }
 
 
@@ -219,6 +228,25 @@ void publishMsgs(um6::Registers& r, ros::NodeHandle* imu_nh, sensor_msgs::Imu& i
   static ros::Publisher rpy_pub = imu_nh->advertise<geometry_msgs::Vector3Stamped>("rpy", 1, false);
   static ros::Publisher temp_pub = imu_nh->advertise<std_msgs::Float32>("temperature", 1, false);
 
+  //Read the magnetometer corrections
+  ///////////////////////////////////
+
+  //std::cout << "The hard iron correction vector is: " << r.mag_bias.get_scaled(0) << "    " << r.mag_bias.get_scaled(1) << r.mag_bias.get_scaled(2) << std::endl;
+  //std::cout << "The soft iron correction matrix is: " << r.mag_soft_bias.get_scaled(0) << "     " << r.mag_soft_bias.get_scaled(5) << std::endl;
+  //r.mag_ref.set(0, 0.123);
+  //float check;
+  //um6::memcpy_network(&check, (float*)r.mag_ref.raw(), 4);
+  //std::cout << "Check is: "<< check << std::endl;
+
+  //float check_mag;
+  //um6::memcpy_network(&check_mag, (float*)r.mag_bias.raw(), 4);
+  //std::cout << "Check_mag is: "<< check_mag*1000 << std::endl;
+//float64[9] soft_iron;
+  //soft_iron[0] = r.mag_soft_bias.get_scaled(0);
+  //soft_iron[1] = r.mag_soft_bias.get_scaled(1);
+ // soft_iron[2] = r.mag_soft_bias.get_scaled(2);
+  //std::cout << "Testing matrix = " << soft_iron << std::endl;
+
   if (imu_pub.getNumSubscribers() > 0)
   {
     // IMU reports a 4x4 wxyz covariance, ROS requires only 3x3 xyz.
@@ -236,6 +264,7 @@ void publishMsgs(um6::Registers& r, ros::NodeHandle* imu_nh, sensor_msgs::Imu& i
     // NED -> ENU conversion (x = y, y = x, z = -z)
     if (tf_ned_to_enu)
     {
+	  //std::cout << "Using ned to enu transform" << std::endl;
       imu_msg.orientation.x = r.quat.get_scaled(2);
       imu_msg.orientation.y = r.quat.get_scaled(1);
       imu_msg.orientation.z = -r.quat.get_scaled(3);
@@ -288,7 +317,7 @@ void publishMsgs(um6::Registers& r, ros::NodeHandle* imu_nh, sensor_msgs::Imu& i
 
     mag_pub.publish(mag_msg);
   }
-
+//-------------------ADDED------------------------------
   if (mag_raw_pub.getNumSubscribers() > 0)
   {
     geometry_msgs::Vector3Stamped mag_raw_msg;
@@ -308,8 +337,9 @@ void publishMsgs(um6::Registers& r, ros::NodeHandle* imu_nh, sensor_msgs::Imu& i
     }
 
     mag_raw_pub.publish(mag_raw_msg);
-  }  
-  
+  }
+//------------------------------------------------------
+
   if (rpy_pub.getNumSubscribers() > 0)
   {
     geometry_msgs::Vector3Stamped rpy_msg;
@@ -367,6 +397,7 @@ int main(int argc, char **argv)
   private_nh.param<double>("linear_acceleration_stdev", linear_acceleration_stdev, 0.06);
   private_nh.param<double>("angular_velocity_stdev", angular_velocity_stdev, 0.005);
 
+
   double linear_acceleration_cov = linear_acceleration_stdev * linear_acceleration_stdev;
   double angular_velocity_cov = angular_velocity_stdev * angular_velocity_stdev;
 
@@ -381,6 +412,7 @@ int main(int argc, char **argv)
   imu_msg.angular_velocity_covariance[0] = angular_velocity_cov;
   imu_msg.angular_velocity_covariance[4] = angular_velocity_cov;
   imu_msg.angular_velocity_covariance[8] = angular_velocity_cov;
+
 
   bool first_failure = true;
   while (ros::ok())
@@ -404,6 +436,7 @@ int main(int argc, char **argv)
         um6::Registers registers;
         ros::ServiceServer srv = imu_nh.advertiseService<um6::Reset::Request, um6::Reset::Response>(
                                    "reset", boost::bind(handleResetService, &sensor, _1, _2));
+
 
         while (ros::ok())
         {
